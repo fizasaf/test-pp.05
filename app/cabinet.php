@@ -55,7 +55,10 @@ $orders = $stmt->fetchAll();
                     <label>Спектакль</label>
                     <select name="performance_id" required>
                         <?php foreach ($performances as $p): ?>
-                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['title']) ?></option>
+                            <!-- Если в URL есть performance_id, выбираем его по умолчанию -->
+                            <option value="<?= $p['id'] ?>" <?= (isset($_GET['performance_id']) && $_GET['performance_id'] == $p['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($p['title']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>

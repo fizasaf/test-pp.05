@@ -3,9 +3,7 @@ require 'db.php';
 session_start();
 
 $error = '';
-if (isset($_GET['registered'])) {
-    $success = 'Регистрация успешна! Войдите в систему.';
-}
+$success = isset($_GET['registered']) ? 'Регистрация успешна! Войдите в систему.' : '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = trim($_POST['login']);
@@ -19,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role_id'] = $user['role_id'];
         $_SESSION['full_name'] = $user['full_name'];
-        
+
         if ($user['role_id'] == 1) {
             header('Location: admin.php');
         } else {
@@ -35,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход - Theatre MVP</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -46,15 +45,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="card" style="max-width: 500px; margin: 0 auto;">
             <h2>Вход</h2>
+
             <?php if ($error): ?>
-                <div class="alert alert-error"><?= $error ?></div>
+                <div class="alert alert-error" role="alert"><?= $error ?></div>
             <?php endif; ?>
-            <?php if (isset($success)): ?>
-                <div class="alert alert-success"><?= $success ?></div>
+            <?php if ($success): ?>
+                <div class="alert alert-success" role="status"><?= $success ?></div>
             <?php endif; ?>
+
             <form method="POST">
-                <div class="form-group"><label>Логин (Email)</label><input type="text" name="login" required></div>
-                <div class="form-group"><label>Пароль</label><input type="password" name="password" required></div>
+                <div class="form-group">
+                    <label for="login">Логин</label>
+                    <input type="text" id="login" name="login" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
                 <button type="submit" class="btn">Войти</button>
             </form>
             <p style="margin-top: 15px; font-size: 0.9rem;">Нет аккаунта? <a href="register.php" style="color: #4a90e2;">Регистрация</a></p>
