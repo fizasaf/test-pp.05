@@ -685,3 +685,128 @@ footer {
     .chat-input-area input:focus {
         border-color: #4a90e2;
     }
+
+    /* ==================== ДАШБОРД (СТАТИСТИКА) ==================== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border: 1px solid #2a2f3a;
+        transition: transform 0.3s, border-color 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent-color);
+    }
+
+    .stat-icon { font-size: 2.5rem; }
+
+    .stat-info { display: flex; flex-direction: column; }
+
+    .stat-label { color: #777; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+    .stat-value { font-size: 1.8rem; font-weight: bold; color: white; margin-top: 5px; }
+
+    /* ==================== ПРОГРЕСС-БАР СТАТУСОВ ==================== */
+    .status-progress {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 200px;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    .step-circle {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #333;
+        border: 2px solid #555;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-circle {
+        background: #4a90e2;
+        border-color: #4a90e2;
+        box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+    }
+
+    .step-label {
+        font-size: 0.7rem;
+        color: #777;
+        margin-top: 5px;
+        white-space: nowrap;
+    }
+
+    .step.active .step-label {
+        color: white;
+    }
+
+    .step-line {
+        flex-grow: 1;
+        height: 2px;
+        background: #333;
+        margin-bottom: 15px; /* Выравнивание по центру кружочков */
+        transition: background 0.3s ease;
+    }
+
+    .step-line.active {
+        background: #4a90e2;
+    }
+
+    /* ==================== МОДАЛЬНОЕ ОКНО ==================== */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        display: flex; /* JS будет менять на flex/none */
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        border: 1px solid #333;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 15px; right: 20px;
+        font-size: 28px;
+        color: #777;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .close-btn:hover { color: white; }

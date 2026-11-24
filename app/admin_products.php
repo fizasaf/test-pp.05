@@ -3,7 +3,6 @@ require 'db.php';
 require 'helpers.php';
 session_start();
 
-// Проверка на админа
 if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 1) {
     header('Location: login.php');
     exit;
@@ -13,16 +12,19 @@ $message = '';
 
 // 1. Обработка добавления товара
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
+    // Сначала считываем все данные из формы в переменные
     $title = trim($_POST['title']);
     $duration = (int)$_POST['duration_min'];
     $description = trim($_POST['description']);
     $genre = trim($_POST['genre']);
     $age_rating = trim($_POST['age_rating']);
     $price = (float)$_POST['base_price'];
+    $venue = trim($_POST['venue'] ?? 'Основная сцена'); // Новое поле
 
+    // Теперь проверяем и вставляем
     if (!empty($title) && $duration > 0 && $price > 0) {
-        $stmt = $pdo->prepare("INSERT INTO performance (title, duration_min, description, genre, age_rating, base_price) VALUES (?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $duration, $description, $genre, $age_rating, $price])) {
+        $stmt = $pdo->prepare("INSERT INTO performance (title, duration_min, description, genre, age_rating, base_price, venue) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$title, $duration, $description, $genre, $age_rating, $price, $venue])) {
             $message = '<div class="alert alert-success" role="alert">Спектакль успешно добавлен!</div>';
         } else {
             $message = '<div class="alert alert-error" role="alert">Ошибка при добавлении.</div>';
@@ -35,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 // 2. Обработка удаления товара
 if (isset($_GET['delete_id'])) {
     $delete_id = (int)$_GET['delete_id'];
-    // Проверяем, есть ли заявки на этот спектакль, чтобы не сломать БД
     $check = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE performance_id = ?");
     $check->execute([$delete_id]);
     if ($check->fetchColumn() > 0) {
@@ -60,6 +61,8 @@ $performances = $pdo->query("SELECT * FROM performance ORDER BY id DESC")->fetch
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="toast-container" class="toast-container"></div>
+
     <header>
         <div class="logo">🎭 Theatre MVP (Админ)</div>
         <nav>
@@ -69,9 +72,26 @@ $performances = $pdo->query("SELECT * FROM performance ORDER BY id DESC")->fetch
             <a href="logout.php" style="color: #ff5252;">Выйти</a>
         </nav>
     </header>
+
     <div class="container">
 
-        <?= $message ?>
+        <!-- Если есть сообщение, показываем его через Toast (JS) -->
+        <?php if ($message): ?>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = `<?= addslashes($message) ?>`;
+                    const text = tempDiv.textContent || tempDiv.innerText || "";
+                    const isSuccess = `<?= $message ?>`.includes('alert-success');
+
+                    const toast = document.createElement('div');
+                    toast.className = `toast toast-${isSuccess ? 'success' : 'error'}`;
+                    toast.textContent = text;
+                    document.getElementById('toast-container').appendChild(toast);
+                    setTimeout(() => { toast.classList.add('hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+                });
+            </script>
+        <?php endif; ?>
 
         <!-- Форма добавления -->
         <div class="card">
@@ -94,6 +114,10 @@ $performances = $pdo->query("SELECT * FROM performance ORDER BY id DESC")->fetch
                 <div class="form-group" style="flex: 1 1 200px;">
                     <label>Жанр</label>
                     <input type="text" name="genre" placeholder="Балет, Комедия...">
+                </div>
+                <div class="form-group" style="flex: 1 1 200px;">
+                    <label>Место проведения</label>
+                    <input type="text" name="venue" placeholder="Например: Большой зал" value="Основная сцена">
                 </div>
                 <div class="form-group" style="flex: 0 1 100px;">
                     <label>Возраст</label>
@@ -118,6 +142,7 @@ $performances = $pdo->query("SELECT * FROM performance ORDER BY id DESC")->fetch
                         <th>ID</th>
                         <th>Название</th>
                         <th>Жанр</th>
+                        <th>Место</th>
                         <th>Цена</th>
                         <th>Действие</th>
                     </tr>
@@ -128,6 +153,7 @@ $performances = $pdo->query("SELECT * FROM performance ORDER BY id DESC")->fetch
                             <td><?= $perf['id'] ?></td>
                             <td><?= htmlspecialchars($perf['title']) ?></td>
                             <td><?= htmlspecialchars($perf['genre']) ?></td>
+                            <td><?= htmlspecialchars($perf['venue'] ?? 'Основная сцена') ?></td>
                             <td><?= number_format($perf['base_price'], 0, '', ' ') ?> ₽</td>
                             <td>
                                 <a href="?delete_id=<?= $perf['id'] ?>" class="btn" style="background: #d32f2f; padding: 5px 10px; font-size: 0.8rem;" onclick="return confirm('Удалить спектакль?')">Удалить</a>

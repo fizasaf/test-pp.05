@@ -8,6 +8,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 2) {
     exit;
 }
 
+// Обработка смены пароля
+$pass_msg = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
+    $old_pass = $_POST['old_password'];
+    $new_pass = $_POST['new_password'];
+
+    // Получаем текущий пароль из БД
+    $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $current_hash = $stmt->fetchColumn();
+
+    if (password_verify($old_pass, $current_hash)) {
+        if (strlen($new_pass) >= 6) {
+            $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
+            $updateStmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $updateStmt->execute([$new_hash, $_SESSION['user_id']]);
+            $pass_msg = '<div class="alert alert-success" role="alert">Пароль успешно изменен!</div>';
+        } else {
+            $pass_msg = '<div class="alert alert-error" role="alert">Новый пароль должен быть не менее 6 символов.</div>';
+        }
+    } else {
+        $pass_msg = '<div class="alert alert-error" role="alert">Неверный текущий пароль.</div>';
+    }
+}
+
 $user_id = $_SESSION['user_id'];
 
 // Обработка создания заявки
@@ -49,13 +74,19 @@ $orders = $stmt->fetchAll();
     </header>
     <div class="container">
         <!-- Профиль -->
-        <div class="card profile-header">
-            <div class="profile-avatar">👤</div>
-            <div>
-                <h2>Здравствуйте, <?= htmlspecialchars($_SESSION['full_name']) ?>!</h2>
-                <p style="color: #777;">Личный кабинет зрителя</p>
-            </div>
-        </div>
+       <div class="card profile-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+           <div style="display: flex; align-items: center; gap: 20px;">
+               <div class="profile-avatar">👤</div>
+               <div>
+                   <h2>Здравствуйте, <?= htmlspecialchars($_SESSION['full_name']) ?>!</h2>
+                   <p style="color: #777; margin: 0;">Личный кабинет зрителя</p>
+               </div>
+           </div>
+           <!-- Кнопка вызова модального окна -->
+           <button class="btn" onclick="document.getElementById('passwordModal').style.display='flex'" style="background: transparent; border: 1px solid #4a90e2; color: #4a90e2;">
+               🔑 Сменить пароль
+           </button>
+       </div>
 
         <!-- Создание заявки -->
         <div class="card">
@@ -121,12 +152,50 @@ $orders = $stmt->fetchAll();
                                             <a href="payment.php?order_id=<?= $order['id'] ?>" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">Оплатить</a>
                                         <?php endif; ?>
                                     </div>
+                                <td>
+                                    <div class="status-progress">
+                                        <!-- Шаг 1: Новая -->
+                                        <div class="step <?= in_array($order['status'], ['new', 'paid']) ? 'active' : '' ?>">
+                                            <div class="step-circle"></div>
+                                            <span class="step-label">Создана</span>
+                                        </div>
+                                        <!-- Линия между шагами -->
+                                        <div class="step-line <?= $order['status'] == 'paid' ? 'active' : '' ?>"></div>
+                                        <!-- Шаг 2: Оплачена -->
+                                        <div class="step <?= $order['status'] == 'paid' ? 'active' : '' ?>">
+                                            <div class="step-circle"></div>
+                                            <span class="step-label">Оплачена</span>
+                                        </div>
+                                    </div>
+                                </td>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+    <!-- Модальное окно смены пароля -->
+    <div id="passwordModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="document.getElementById('passwordModal').style.display='none'">&times;</span>
+            <h3>Смена пароля</h3>
+
+            <?= $pass_msg ?> <!-- Сюда выводится сообщение об успехе или ошибке -->
+
+            <form method="POST">
+                <input type="hidden" name="change_password" value="1">
+                <div class="form-group">
+                    <label>Текущий пароль</label>
+                    <input type="password" name="old_password" required>
+                </div>
+                <div class="form-group">
+                    <label>Новый пароль</label>
+                    <input type="password" name="new_password" required minlength="6">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Сохранить новый пароль</button>
+            </form>
         </div>
     </div>
 </body>

@@ -3,6 +3,11 @@ require 'db.php';
 require 'helpers.php';
 session_start();
 
+// --- СТАТИСТИКА (ДАШБОРД) ---
+$totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$totalOrders = $pdo->query("SELECT COUNT(*) FROM orders")->fetchColumn();
+$totalRevenue = $pdo->query("SELECT COALESCE(SUM(p.base_price * o.tickets_count), 0) FROM orders o JOIN performance p ON o.performance_id = p.id WHERE o.status = 'paid'")->fetchColumn();
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 1) {
     header('Location: login.php');
     exit;
@@ -90,6 +95,30 @@ $orders = $stmt->fetchAll();
     <div id="toast-container" class="toast-container"></div>
 
     <div class="container">
+        <!-- ДАШБОРД СТАТИСТИКИ -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <span class="stat-label">Пользователи</span>
+                    <span class="stat-value"><?= $totalUsers ?></span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎟️</div>
+                <div class="stat-info">
+                    <span class="stat-label">Всего заявок</span>
+                    <span class="stat-value"><?= $totalOrders ?></span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-info">
+                    <span class="stat-label">Выручка</span>
+                    <span class="stat-value" style="color: #27ae60;"><?= number_format($totalRevenue, 0, '', ' ') ?> ₽</span>
+                </div>
+            </div>
+        </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
                 <h2>Управление заявками</h2>
@@ -153,21 +182,18 @@ $orders = $stmt->fetchAll();
             <h3>💬 Чат поддержки</h3>
 
             <?php
-            $chatUsers = $pdo->query("SELECT DISTINCT u.id, u.full_name FROM users u JOIN support_messages sm ON u.id = sm.user_id WHERE sm.is_admin = 0")->fetchAll();
-            ?>
+                $chatUsers = $pdo->query("SELECT id, full_name FROM users WHERE role_id = 2 ORDER BY full_name ASC")->fetchAll();
+                ?>
 
             <div class="chat-layout">
                 <div class="chat-sidebar">
-                    <div class="chat-sidebar-header">Пользователи</div>
+                    <div class="chat-sidebar-header">Все пользователи</div>
                     <?php foreach ($chatUsers as $cu): ?>
-                        <a href="admin.php?chat_user=<?= $cu['id'] ?>" class="chat-user-item" style="text-decoration: none; color: white;">
+                        <a href="admin.php?chat_user=<?= $cu['id'] ?>" class="chat-user-item" style="text-decoration: none; color: white; <?= (isset($_GET['chat_user']) && $_GET['chat_user'] == $cu['id']) ? 'background: rgba(74, 144, 226, 0.2);' : '' ?>">
                             <div class="chat-avatar">👤</div>
                             <div class="chat-user-name"><?= htmlspecialchars($cu['full_name']) ?></div>
                         </a>
                     <?php endforeach; ?>
-                    <?php if (empty($chatUsers)): ?>
-                        <p style="padding: 15px; color: #777; font-size: 0.9rem; text-align: center;">Нет сообщений</p>
-                    <?php endif; ?>
                 </div>
 
                 <div class="chat-main">
