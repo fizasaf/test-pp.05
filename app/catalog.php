@@ -39,20 +39,27 @@ $performances = $stmt->fetchAll();
         <div class="catalog-grid">
             <?php foreach ($performances as $perf): ?>
                 <div class="catalog-card">
-                    <!-- Плашка с жанром -->
-                    <div class="catalog-badge"><?= htmlspecialchars($perf['genre']) ?></div>
-
-                    <h3><?= htmlspecialchars($perf['title']) ?></h3>
-                    <p class="catalog-desc"><?= htmlspecialchars($perf['description']) ?></p>
-
-                    <div class="catalog-meta">
-                        <span>⏱ <?= $perf['duration_min'] ?> мин.</span>
-                        <span>🔞 <?= htmlspecialchars($perf['age_rating']) ?></span>
+                    <!-- Обложка спектакля (градиент с иконкой) -->
+                    <div class="catalog-cover" style="background: linear-gradient(135deg, #1e222d, <?= $perf['id'] % 2 == 0 ? '#8e44ad' : '#4a90e2' ?>);">
+                        <span>🎭</span>
                     </div>
 
-                    <div class="catalog-footer">
-                        <div class="price"><?= number_format($perf['base_price'], 0, '', ' ') ?> ₽</div>
-                        <a href="cabinet.php?performance_id=<?= $perf['id'] ?>" class="btn">Купить</a>
+                    <div class="catalog-body">
+                        <!-- Плашка с жанром -->
+                        <div class="catalog-badge"><?= htmlspecialchars($perf['genre']) ?></div>
+
+                        <h3><?= htmlspecialchars($perf['title']) ?></h3>
+                        <p class="catalog-desc"><?= htmlspecialchars($perf['description']) ?></p>
+
+                        <div class="catalog-meta">
+                            <span>⏱ <?= $perf['duration_min'] ?> мин.</span>
+                            <span>👤 <?= htmlspecialchars($perf['age_rating']) ?></span>
+                        </div>
+
+                        <div class="catalog-footer">
+                            <div class="price"><?= number_format($perf['base_price'], 0, '', ' ') ?> ₽</div>
+                            <a href="cabinet.php?performance_id=<?= $perf['id'] ?>" class="btn">Купить</a>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
